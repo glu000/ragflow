@@ -512,6 +512,10 @@ export default {
       baseUrl: 'Base-Url',
       baseUrlTip:
         'Jika kunci API Anda berasal dari OpenAI, abaikan saja. Penyedia perantara lainnya akan memberikan base url ini dengan kunci API.',
+      tongyiBaseUrlTip:
+        'Untuk pengguna Tiongkok, tidak perlu diisi atau gunakan https://dashscope.aliyuncs.com/compatible-mode/v1. Untuk pengguna internasional, gunakan https://dashscope-intl.aliyuncs.com/compatible-mode/v1',
+      tongyiBaseUrlPlaceholder:
+        '(Hanya untuk pengguna internasional, silakan lihat tip)',
       modify: 'Ubah',
       systemModelSettings: 'Tetapkan model default',
       chatModel: 'Model Obrolan',
@@ -759,6 +763,9 @@ export default {
       duckDuckGo: 'DuckDuckGo',
       duckDuckGoDescription:
         'Komponen yang mengambil hasil pencarian dari duckduckgo.com, dengan TopN menentukan jumlah hasil pencarian. Ini melengkapi basis pengetahuan yang ada.',
+      searXNG: 'SearXNG',
+      searXNGDescription:
+        'Komponen yang melakukan pencarian menggunakan URL instance SearXNG yang Anda berikan. Spesifikasikan TopN dan URL instance.',
       channel: 'Saluran',
       channelTip: `Lakukan pencarian teks atau pencarian berita pada input komponen`,
       text: 'Teks',

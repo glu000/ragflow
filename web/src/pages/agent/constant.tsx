@@ -4,6 +4,7 @@ import {
 } from '@/components/similarity-slider';
 import {
   AgentGlobals,
+  AgentGlobalsSysQueryWithBrace,
   CodeTemplateStrMap,
   ProgrammingLanguage,
 } from '@/constants/agent';
@@ -20,6 +21,7 @@ import {
 import { ModelVariableType } from '@/constants/knowledge';
 import i18n from '@/locales/config';
 import { setInitialChatVariableEnabledFieldValue } from '@/utils/chat';
+import { t } from 'i18next';
 
 // DuckDuckGo's channel options
 export enum Channel {
@@ -87,6 +89,8 @@ export enum Operator {
   TavilyExtract = 'TavilyExtract',
   UserFillUp = 'UserFillUp',
   StringTransform = 'StringTransform',
+  SearXNG = 'SearXNG',
+  Placeholder = 'Placeholder',
 }
 
 export const SwitchLogicOperatorOptions = ['and', 'or'];
@@ -210,6 +214,9 @@ export const componentMenuList = [
   {
     name: Operator.Email,
   },
+  {
+    name: Operator.SearXNG,
+  },
 ];
 
 export const SwitchOperatorOptions = [
@@ -242,7 +249,7 @@ const initialQueryBaseValues = {
 };
 
 export const initialRetrievalValues = {
-  query: AgentGlobals.SysQuery,
+  query: AgentGlobalsSysQueryWithBrace,
   top_n: 8,
   top_k: 1024,
   kb_ids: [],
@@ -256,6 +263,10 @@ export const initialRetrievalValues = {
     formalized_content: {
       type: 'string',
       value: '',
+    },
+    json: {
+      type: 'Array<Object>',
+      value: [],
     },
   },
 };
@@ -326,6 +337,22 @@ export const initialKeywordExtractValues = {
 export const initialDuckValues = {
   top_n: 10,
   channel: Channel.Text,
+  query: AgentGlobals.SysQuery,
+  outputs: {
+    formalized_content: {
+      value: '',
+      type: 'string',
+    },
+    json: {
+      value: [],
+      type: 'Array<Object>',
+    },
+  },
+};
+
+export const initialSearXNGValues = {
+  top_n: '10',
+  searxng_url: '',
   query: AgentGlobals.SysQuery,
   outputs: {
     formalized_content: {
@@ -630,16 +657,7 @@ export const initialAgentValues = {
   ...initialLlmBaseValues,
   description: '',
   user_prompt: '',
-  sys_prompt: `<role>
-  You are {{agent_name}}, an AI assistant specialized in {{domain_or_task}}.
-</role>
-<instructions>
-  1. Understand the user’s request.  
-  2. Decompose it into logical subtasks.  
-  3. Execute each subtask step by step, reasoning transparently.  
-  4. Validate accuracy and consistency.  
-  5. Summarize the final result clearly.
-</instructions>`,
+  sys_prompt: t('flow.sysPromptDefultValue'),
   prompts: [{ role: PromptRole.User, content: `{${AgentGlobals.SysQuery}}` }],
   message_history_window_size: 12,
   max_retries: 3,
@@ -763,6 +781,11 @@ export const initialTavilyExtractValues = {
   },
 };
 
+export const initialPlaceholderValues = {
+  // Placeholder node doesn't need any specific form values
+  // It's just a visual placeholder
+};
+
 export const CategorizeAnchorPointPositions = [
   { top: 1, right: 34 },
   { top: 8, right: 18 },
@@ -815,6 +838,7 @@ export const RestrictedUpstreamMap = {
   [Operator.GitHub]: [Operator.Begin, Operator.Retrieval],
   [Operator.BaiduFanyi]: [Operator.Begin, Operator.Retrieval],
   [Operator.QWeather]: [Operator.Begin, Operator.Retrieval],
+  [Operator.SearXNG]: [Operator.Begin, Operator.Retrieval],
   [Operator.ExeSQL]: [Operator.Begin],
   [Operator.Switch]: [Operator.Begin],
   [Operator.WenCai]: [Operator.Begin],
@@ -859,6 +883,7 @@ export const NodeMap = {
   [Operator.GitHub]: 'ragNode',
   [Operator.BaiduFanyi]: 'ragNode',
   [Operator.QWeather]: 'ragNode',
+  [Operator.SearXNG]: 'ragNode',
   [Operator.ExeSQL]: 'ragNode',
   [Operator.Switch]: 'switchNode',
   [Operator.Concentrator]: 'logicNode',
@@ -881,6 +906,7 @@ export const NodeMap = {
   [Operator.UserFillUp]: 'ragNode',
   [Operator.StringTransform]: 'ragNode',
   [Operator.TavilyExtract]: 'ragNode',
+  [Operator.Placeholder]: 'placeholderNode',
 };
 
 export enum BeginQueryType {
@@ -931,3 +957,12 @@ export enum AgentExceptionMethod {
   Comment = 'comment',
   Goto = 'goto',
 }
+
+export const PLACEHOLDER_NODE_WIDTH = 200;
+export const PLACEHOLDER_NODE_HEIGHT = 60;
+export const DROPDOWN_SPACING = 25;
+export const DROPDOWN_ADDITIONAL_OFFSET = 50;
+export const HALF_PLACEHOLDER_NODE_WIDTH = PLACEHOLDER_NODE_WIDTH / 2;
+export const HALF_PLACEHOLDER_NODE_HEIGHT =
+  PLACEHOLDER_NODE_HEIGHT + DROPDOWN_SPACING + DROPDOWN_ADDITIONAL_OFFSET;
+export const PREVENT_CLOSE_DELAY = 300;

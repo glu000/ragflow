@@ -1,4 +1,5 @@
 import { useHandleFilterSubmit } from '@/components/list-filter-bar/use-handle-filter-submit';
+import message from '@/components/ui/message';
 import {
   IKnowledge,
   IKnowledgeGraph,
@@ -8,12 +9,12 @@ import {
 import { ITestRetrievalRequestBody } from '@/interfaces/request/knowledge';
 import i18n from '@/locales/config';
 import kbService, {
+  deleteKnowledgeGraph,
   getKnowledgeGraph,
   listDataset,
 } from '@/services/knowledge-service';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useDebounce } from 'ahooks';
-import { message } from 'antd';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'umi';
 import {
@@ -30,6 +31,7 @@ export const enum KnowledgeApiAction {
   FetchKnowledgeDetail = 'fetchKnowledgeDetail',
   FetchKnowledgeGraph = 'fetchKnowledgeGraph',
   FetchMetadata = 'fetchMetadata',
+  RemoveKnowledgeGraph = 'removeKnowledgeGraph',
 }
 
 export const useKnowledgeBaseId = (): string => {
@@ -72,12 +74,14 @@ export const useTestRetrieval = () => {
       chunks: [],
       doc_aggs: [],
       total: 0,
+      isRuned: false,
     },
     enabled: false,
     gcTime: 0,
     queryFn: async () => {
       const { data } = await kbService.retrieval_test(queryParams);
-      return data?.data ?? {};
+      const result = data?.data ?? {};
+      return { ...result, isRuned: true };
     },
   });
 
@@ -294,3 +298,28 @@ export function useFetchKnowledgeMetadata(kbIds: string[] = []) {
 
   return { data, loading };
 }
+
+export const useRemoveKnowledgeGraph = () => {
+  const knowledgeBaseId = useKnowledgeBaseId();
+
+  const queryClient = useQueryClient();
+  const {
+    data,
+    isPending: loading,
+    mutateAsync,
+  } = useMutation({
+    mutationKey: [KnowledgeApiAction.RemoveKnowledgeGraph],
+    mutationFn: async () => {
+      const { data } = await deleteKnowledgeGraph(knowledgeBaseId);
+      if (data.code === 0) {
+        message.success(i18n.t(`message.deleted`));
+        queryClient.invalidateQueries({
+          queryKey: ['fetchKnowledgeGraph'],
+        });
+      }
+      return data?.code;
+    },
+  });
+
+  return { data, loading, removeKnowledgeGraph: mutateAsync };
+};
