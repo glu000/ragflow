@@ -38,6 +38,8 @@ services:
       - ../history_data_agent:/ragflow/history_data_agent
       - ./service_conf.yaml.template:/ragflow/conf/service_conf.yaml.template
       - ./entrypoint.sh:/ragflow/entrypoint.sh
+      - /root/google-sa.json:/ragflow/gcp-key.json
+      - ./chat_model.py:/ragflow/rag/llm/chat_model.py:ro
     env_file: .env
     environment:
       - TZ=${TIMEZONE}
