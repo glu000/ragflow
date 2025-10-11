@@ -114,8 +114,8 @@ export default {
       startDate: '开始时间',
       source: '来源',
       fileName: '文件名',
-      datasetLogs: '数据集日志',
-      fileLogs: '文件日志',
+      datasetLogs: '数据集',
+      fileLogs: '文件',
       overview: '概览',
       success: '成功',
       failed: '失败',
@@ -255,6 +255,9 @@ export default {
       theDocumentBeingParsedCannotBeDeleted: '正在解析的文档不能被删除',
     },
     knowledgeConfiguration: {
+      tocExtraction: '目录提取',
+      tocExtractionTip:
+        '对于已有的chunk生成层级结构的目录信息（每个文件一个目录）。在查询时，激活`目录增强`后，系统会用大模型去判断用户问题和哪些目录项相关，从而找到相关的chunk。',
       deleteGenerateModalContent: `
         <p>删除生成的 <strong class='text-text-primary'>{{type}}</strong> 结果
           将从此数据集中移除所有派生实体和关系。
@@ -1619,12 +1622,12 @@ General：实体和关系提取提示来自 GitHub - microsoft/graphrag：基于
       tokenizerRequired: '请先添加Tokenizer节点',
       tokenizerDescription:
         '根据所选的搜索方法，将文本转换为所需的数据结构（例如，用于嵌入搜索的向量嵌入）。',
-      splitter: '分词器拆分器',
+      splitter: '按字符分割',
       splitterDescription:
         '根据分词器长度将文本拆分成块，并带有可选的分隔符和重叠。',
       hierarchicalMergerDescription:
         '使用正则表达式规则按标题层次结构将文档拆分成多个部分，以实现更精细的控制。',
-      hierarchicalMerger: '标题拆分器',
+      hierarchicalMerger: '按标题分割',
       extractor: '提取器',
       extractorDescription:
         '使用 LLM 从文档块（例如摘要、分类等）中提取结构化见解。',
