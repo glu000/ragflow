@@ -1,3 +1,20 @@
+#
+#  Copyright 2025 The InfiniFlow Authors. All Rights Reserved.
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
+
+
 import re
 from werkzeug.security import check_password_hash
 from api.db import ActiveEnum
@@ -8,8 +25,10 @@ from api.db.services.user_service import TenantService
 from api.db.services.knowledgebase_service import KnowledgebaseService
 from api.utils.crypt import decrypt
 from api.utils import health_utils
+
 from api.common.exceptions import AdminException, UserAlreadyExistsError, UserNotFoundError
 from config import SERVICE_CONFIGS
+
 
 class UserMgr:
     @staticmethod
@@ -17,7 +36,8 @@ class UserMgr:
         users = UserService.get_all_users()
         result = []
         for user in users:
-            result.append({'email': user.email, 'nickname': user.nickname, 'create_date': user.create_date, 'is_active': user.is_active})
+            result.append({'email': user.email, 'nickname': user.nickname, 'create_date': user.create_date,
+                           'is_active': user.is_active})
         return result
 
     @staticmethod
@@ -111,6 +131,7 @@ class UserMgr:
         UserService.update_user(usr.id, {"is_active": target_status})
         return f"Turn {_activate_status} user activate status successfully!"
 
+
 class UserServiceMgr:
 
     @staticmethod
@@ -148,6 +169,7 @@ class UserServiceMgr:
             'canvas_type': r['canvas_type'],
             'canvas_category': r['canvas_category']
         } for r in res]
+
 
 class ServiceMgr:
 
