@@ -1204,15 +1204,24 @@ class GoogleChat(Base):
             gen_conf.pop("thinking_budget", None)
             return None
 
-        # For Vertex AI Generative Models, default to thinking disabled
-        thinking_budget = gen_conf.pop("thinking_budget", 0)
+        # For Vertex AI Generative Models, check if user explicitly set thinking_budget
+        thinking_budget = gen_conf.pop("thinking_budget", None)
 
-        if thinking_budget is not None:
-            try:
-                import vertexai.generative_models as glm  # type: ignore
-                return glm.ThinkingConfig(thinking_budget=thinking_budget)
-            except Exception:
-                pass
+        # If user didn't set it, default to 0 (disabled)
+        if thinking_budget is None:
+            thinking_budget = 0
+
+        logging.info(f"[GoogleChat] Model: {self.model_name}, thinking_budget: {thinking_budget}")
+
+        # Create ThinkingConfig only if needed (0 or user-specified value)
+        try:
+            import vertexai.generative_models as glm  # type: ignore
+            config = glm.ThinkingConfig(thinking_budget=thinking_budget)
+            logging.info(f"[GoogleChat] Created ThinkingConfig with budget={thinking_budget}")
+            return config
+        except Exception as e:
+            logging.error(f"[GoogleChat] Failed to create ThinkingConfig: {e}")
+            pass
         return None
 
     def _chat(self, history, gen_conf={}, **kwargs):
