@@ -1214,20 +1214,9 @@ class GoogleChat(Base):
         thinking_budget = gen_conf.pop("thinking_budget", 0)
         gen_conf = self._clean_conf(gen_conf)
 
-        # Convert history to google-genai format
-        messages = []
-        for item in history:
-            if item["role"] == "system":
-                continue
-            msg = deepcopy(item)
-            # google-genai uses 'model' instead of 'assistant'
-            if msg["role"] == "assistant":
-                msg["role"] = "model"
-            messages.append(msg)
-
         # Build GenerateContentConfig
         try:
-            from google.genai.types import GenerateContentConfig, ThinkingConfig
+            from google.genai.types import GenerateContentConfig, ThinkingConfig, Content, Part
         except ImportError as e:
             logging.error(f"[GoogleChat] Failed to import google-genai: {e}. Please install: pip install google-genai>=1.41.0")
             raise
@@ -1247,9 +1236,22 @@ class GoogleChat(Base):
 
         config = GenerateContentConfig(**config_dict)
 
+        # Convert history to google-genai Content format
+        contents = []
+        for item in history:
+            if item["role"] == "system":
+                continue
+            # google-genai uses 'model' instead of 'assistant'
+            role = "model" if item["role"] == "assistant" else item["role"]
+            content = Content(
+                role=role,
+                parts=[Part(text=item["content"])]
+            )
+            contents.append(content)
+
         response = self.client.models.generate_content(
             model=self.model_name,
-            contents=messages,
+            contents=contents,
             config=config
         )
 
@@ -1298,18 +1300,9 @@ class GoogleChat(Base):
             thinking_budget = gen_conf.pop("thinking_budget", 0)
             gen_conf = self._clean_conf(gen_conf)
 
-            # Convert history to google-genai format
-            messages = []
-            for item in history:
-                msg = deepcopy(item)
-                # google-genai uses 'model' instead of 'assistant'
-                if msg["role"] == "assistant":
-                    msg["role"] = "model"
-                messages.append(msg)
-
             # Build GenerateContentConfig
             try:
-                from google.genai.types import GenerateContentConfig, ThinkingConfig
+                from google.genai.types import GenerateContentConfig, ThinkingConfig, Content, Part
             except ImportError as e:
                 logging.error(f"[GoogleChat] Failed to import google-genai: {e}. Please install: pip install google-genai>=1.41.0")
                 raise
@@ -1329,10 +1322,21 @@ class GoogleChat(Base):
 
             config = GenerateContentConfig(**config_dict)
 
+            # Convert history to google-genai Content format
+            contents = []
+            for item in history:
+                # google-genai uses 'model' instead of 'assistant'
+                role = "model" if item["role"] == "assistant" else item["role"]
+                content = Content(
+                    role=role,
+                    parts=[Part(text=item["content"])]
+                )
+                contents.append(content)
+
             try:
                 for chunk in self.client.models.generate_content_stream(
                     model=self.model_name,
-                    contents=messages,
+                    contents=contents,
                     config=config
                 ):
                     text = chunk.text
