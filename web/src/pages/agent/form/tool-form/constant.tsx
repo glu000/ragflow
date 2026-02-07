@@ -1,6 +1,4 @@
 import { Operator } from '../../constant';
-import AkShareForm from '../akshare-form';
-import DeepLForm from '../deepl-form';
 import ArXivForm from './arxiv-form';
 import BingForm from './bing-form';
 import CrawlerForm from './crawler-form';
@@ -28,10 +26,8 @@ export const ToolFormConfigMap = {
   [Operator.Google]: GoogleForm,
   [Operator.Bing]: BingForm,
   [Operator.GoogleScholar]: GoogleScholarForm,
-  [Operator.DeepL]: DeepLForm,
   [Operator.GitHub]: GithubForm,
   [Operator.ExeSQL]: ExeSQLForm,
-  [Operator.AkShare]: AkShareForm,
   [Operator.YahooFinance]: YahooFinanceForm,
   [Operator.Crawler]: CrawlerForm,
   [Operator.Email]: EmailForm,

@@ -1,4 +1,5 @@
 import { MessageType } from '@/constants/chat';
+import { IAttachment } from '@/hooks/use-send-message';
 
 export interface PromptConfig {
   empty_response: string;
@@ -12,6 +13,7 @@ export interface PromptConfig {
   use_kg: boolean;
   reasoning?: boolean;
   cross_languages?: Array<string>;
+  tavily_api_key?: string;
 }
 
 export interface Parameter {
@@ -95,8 +97,9 @@ export interface Message {
   id?: string;
   audio_binary?: string;
   data?: any;
-  files?: File[];
+  files?: (File | UploadResponseDataType)[];
   chatBoxId?: string;
+  attachment?: IAttachment;
 }
 
 export interface IReferenceChunk {
@@ -126,6 +129,7 @@ export interface IReferenceObject {
 
 export interface IAnswer {
   answer: string;
+  attachment?: IAttachment;
   reference?: IReference;
   conversationId?: string;
   prompt?: string;
@@ -179,4 +183,26 @@ export interface IExternalChatInfo {
   avatar?: string;
   title: string;
   prologue?: string;
+  has_tavily_key?: boolean;
+}
+
+export interface IMessage extends Message {
+  id: string;
+  reference?: IReference; // the latest news has reference
+  conversationId?: string; // To distinguish which conversation the message belongs to
+}
+
+export interface IClientConversation extends IConversation {
+  message: IMessage[];
+}
+
+export interface UploadResponseDataType {
+  created_at: number;
+  created_by: string;
+  extension: string;
+  id: string;
+  mime_type: string;
+  name: string;
+  preview_url: null;
+  size: number;
 }

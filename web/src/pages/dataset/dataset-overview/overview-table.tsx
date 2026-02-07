@@ -1,3 +1,5 @@
+import { EmptyType } from '@/components/empty/constant';
+import Empty from '@/components/empty/empty';
 import FileStatusBadge from '@/components/file-status-badge';
 import { FileIcon, IconFontFill } from '@/components/icon-font';
 import { RAGFlowAvatar } from '@/components/ragflow-avatar';
@@ -11,11 +13,19 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { RunningStatusMap } from '@/constants/knowledge';
 import { useTranslate } from '@/hooks/common-hooks';
 import { useNavigatePage } from '@/hooks/logic-hooks/navigate-hooks';
+import { cn } from '@/lib/utils';
 import { PipelineResultSearchParams } from '@/pages/dataflow-result/constant';
 import { NavigateToDataflowResultProps } from '@/pages/dataflow-result/interface';
+import { useDataSourceInfo } from '@/pages/user-setting/data-source/constant';
+import { IDataSourceInfoMap } from '@/pages/user-setting/data-source/interface';
 import { formatDate, formatSecondsToHumanReadable } from '@/utils/date';
 import {
   ColumnDef,
@@ -30,9 +40,9 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { TFunction } from 'i18next';
-import { ArrowUpDown, ClipboardList, Eye } from 'lucide-react';
+import { ArrowUpDown, ClipboardList, Eye, MonitorUp } from 'lucide-react';
 import { FC, useMemo, useState } from 'react';
-import { useParams } from 'umi';
+import { useParams } from 'react-router';
 import { RunningStatus } from '../dataset/constant';
 import ProcessLogModal from '../process-log-modal';
 import { LogTabs, ProcessingType, ProcessingTypeMap } from './dataset-common';
@@ -45,6 +55,7 @@ export const getFileLogsTableColumns = (
   navigateToDataflowResult: (
     props: NavigateToDataflowResultProps,
   ) => () => void,
+  dataSourceInfo: IDataSourceInfoMap,
 ) => {
   // const { t } = useTranslate('knowledgeDetails');
   const columns: ColumnDef<IFileLogItem & DocumentLog>[] = [
@@ -77,43 +88,63 @@ export const getFileLogsTableColumns = (
     {
       accessorKey: 'fileName',
       header: t('fileName'),
+      meta: { cellClassName: 'max-w-[20vw]' },
       cell: ({ row }) => (
-        <div
-          className="flex items-center gap-2 text-text-primary"
-          // onClick={navigateToDataflowResult(
-          //   row.original.id,
-          //   row.original.kb_id,
-          // )}
-        >
-          <FileIcon name={row.original.fileName}></FileIcon>
-          {row.original.fileName}
-        </div>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="flex gap-2 cursor-pointer">
+              <FileIcon name={row.original.document_name}></FileIcon>
+              <span className={cn('truncate')}>
+                {row.original.document_name}
+              </span>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{row.original.document_name}</p>
+          </TooltipContent>
+        </Tooltip>
       ),
     },
     {
       accessorKey: 'source_from',
       header: t('source'),
+      meta: { cellClassName: 'max-w-[10vw]' },
       cell: ({ row }) => (
         <div className="text-text-primary">
-          {row.original.source_from || t('localUpload')}
+          {row.original.source_from === 'local' ||
+          row.original.source_from === '' ? (
+            <div className="bg-accent-primary-5 w-6 h-6 rounded-full flex items-center justify-center">
+              <MonitorUp className="text-accent-primary" size={16} />
+            </div>
+          ) : (
+            <div className="w-6 h-6 flex items-center justify-center">
+              {
+                dataSourceInfo[
+                  row.original.source_from as keyof typeof dataSourceInfo
+                ].icon
+              }
+            </div>
+          )}
         </div>
       ),
     },
     {
       accessorKey: 'pipeline_title',
       header: t('dataPipeline'),
-      cell: ({ row }) => (
-        <div className="flex items-center gap-2 text-text-primary">
-          <RAGFlowAvatar
-            avatar={row.original.avatar}
-            name={row.original.pipeline_title}
-            className="size-4"
-          />
-          {row.original.pipeline_title === 'naive'
-            ? 'general'
-            : row.original.pipeline_title}
-        </div>
-      ),
+      cell: ({ row }) => {
+        const title = row.original.pipeline_title;
+        const pipelineTitle = title === 'naive' ? 'general' : title;
+        return (
+          <div className="flex items-center gap-2 text-text-primary">
+            <RAGFlowAvatar
+              avatar={row.original.avatar}
+              name={pipelineTitle}
+              className="size-4"
+            />
+            {pipelineTitle}
+          </div>
+        );
+      },
     },
     {
       accessorKey: 'process_begin_at',
@@ -311,13 +342,13 @@ const FileLogsTable: FC<FileLogsTableProps> = ({
   data,
   pagination,
   setPagination,
-  loading,
   active = LogTabs.FILE_LOGS,
 }) => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [rowSelection, setRowSelection] = useState({});
   const { t } = useTranslate('knowledgeDetails');
+  const { t: tDatasetOverview } = useTranslate('datasetOverview');
   const [isModalVisible, setIsModalVisible] = useState(false);
   const { navigateToDataflowResult } = useNavigatePage();
   const [logInfo, setLogInfo] = useState<IFileLogItem>();
@@ -328,18 +359,18 @@ const FileLogsTable: FC<FileLogsTableProps> = ({
       fileName: row.original.document_name,
       source: row.original.source_from,
       task: row.original?.task_type,
-      status: row.original.statusName,
+      status: row.original.status as RunningStatus,
       startDate: formatDate(row.original.process_begin_at),
       duration: formatSecondsToHumanReadable(
         row.original.process_duration || 0,
       ),
       details: row.original.progress_msg,
-    };
+    } as unknown as IFileLogItem;
     console.log('logDetail', logDetail);
     setLogInfo(logDetail);
     setIsModalVisible(true);
   };
-
+  const { dataSourceInfo } = useDataSourceInfo();
   const columns = useMemo(() => {
     return active === LogTabs.FILE_LOGS
       ? getFileLogsTableColumns(
@@ -347,6 +378,7 @@ const FileLogsTable: FC<FileLogsTableProps> = ({
           showLog,
           kowledgeId || '',
           navigateToDataflowResult,
+          dataSourceInfo,
         )
       : getDatasetLogsTableColumns(t, showLog);
   }, [active, t]);
@@ -419,7 +451,10 @@ const FileLogsTable: FC<FileLogsTableProps> = ({
           ) : (
             <TableRow>
               <TableCell colSpan={columns.length} className="h-24 text-center">
-                No results.
+                <Empty
+                  type={EmptyType.Data}
+                  text={tDatasetOverview('noData')}
+                />
               </TableCell>
             </TableRow>
           )}

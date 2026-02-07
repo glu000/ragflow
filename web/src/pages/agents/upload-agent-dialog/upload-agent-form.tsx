@@ -14,8 +14,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { FileMimeType } from '@/constants/common';
+import { TagRenameId } from '@/constants/knowledge';
 import { IModalProps } from '@/interfaces/common';
-import { TagRenameId } from '@/pages/add-knowledge/constant';
 import { NameFormField, NameFormSchema } from '../name-form-field';
 
 export const FormSchema = z.object({
@@ -53,6 +53,7 @@ export function UploadAgentForm({ hideModal, onOk }: IModalProps<any>) {
               <FormLabel required>DSL</FormLabel>
               <FormControl>
                 <FileUploader
+                  className="text-ellipsis overflow-hidden"
                   value={field.value}
                   onValueChange={field.onChange}
                   maxFileCount={1}

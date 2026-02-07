@@ -1,8 +1,10 @@
 ---
 sidebar_position: 25
 slug: /execute_sql
+sidebar_custom_props: {
+  categoryIcon: RagSql
+}
 ---
-
 # Execute SQL tool
 
 A tool that execute SQL queries on a specified relational database.
@@ -40,12 +42,12 @@ For dynamic SQL queries, you can include variables in your SQL queries, such as 
 
 ### Database type
 
-The supported database type. Currently the following database types are available:
+The supported database type. Currently, the following database types are available:
 
 - MySQL
-- PostreSQL
+- PostgreSQL
 - MariaDB
-- Microsoft SQL Server (Myssql)
+- Microsoft SQL Server (Mssql)
 
 ### Database
 

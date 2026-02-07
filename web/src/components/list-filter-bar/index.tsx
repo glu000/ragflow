@@ -6,7 +6,7 @@ import React, {
   ReactNode,
   useMemo,
 } from 'react';
-import { IconFont } from '../icon-font';
+import { HomeIcon } from '../svg-icon';
 import { Button, ButtonProps } from '../ui/button';
 import { SearchInput } from '../ui/input';
 import { CheckboxFormMultipleProps, FilterPopover } from './filter-popover';
@@ -17,6 +17,7 @@ interface IProps {
   onSearchChange?: ChangeEventHandler<HTMLInputElement>;
   showFilter?: boolean;
   leftPanel?: ReactNode;
+  preChildren?: ReactNode;
 }
 
 export const FilterButton = React.forwardRef<
@@ -43,9 +44,11 @@ export const FilterButton = React.forwardRef<
   );
 });
 
+FilterButton.displayName = 'FilterButton';
 export default function ListFilterBar({
   title,
   children,
+  preChildren,
   searchString,
   onSearchChange,
   showFilter = true,
@@ -56,14 +59,27 @@ export default function ListFilterBar({
   filters,
   className,
   icon,
+  filterGroup,
 }: PropsWithChildren<IProps & Omit<CheckboxFormMultipleProps, 'setOpen'>> & {
   className?: string;
   icon?: ReactNode;
+  filterGroup?: Record<string, string[]>;
 }) {
   const filterCount = useMemo(() => {
     return typeof value === 'object' && value !== null
       ? Object.values(value).reduce((pre, cur) => {
-          return pre + cur.length;
+          if (Array.isArray(cur)) {
+            return pre + cur.length;
+          }
+          if (typeof cur === 'object') {
+            return (
+              pre +
+              Object.values(cur).reduce((pre, cur) => {
+                return pre + cur.length;
+              }, 0)
+            );
+          }
+          return pre;
         }, 0)
       : 0;
   }, [value]);
@@ -72,18 +88,21 @@ export default function ListFilterBar({
     <div className={cn('flex justify-between mb-5 items-center', className)}>
       <div className="text-2xl font-semibold flex items-center gap-2.5">
         {typeof icon === 'string' ? (
-          <IconFont name={icon} className="size-6"></IconFont>
+          // <IconFont name={icon} className="size-6"></IconFont>
+          <HomeIcon name={`${icon}`} width={'32'} />
         ) : (
           icon
         )}
         {leftPanel || title}
       </div>
       <div className="flex gap-5 items-center">
+        {preChildren}
         {showFilter && (
           <FilterPopover
             value={value}
             onChange={onChange}
             filters={filters}
+            filterGroup={filterGroup}
             onOpenChange={onOpenChange}
           >
             <FilterButton count={filterCount}></FilterButton>

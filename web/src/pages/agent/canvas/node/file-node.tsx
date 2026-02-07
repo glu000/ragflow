@@ -14,7 +14,7 @@ import { BeginQuery } from '../../interface';
 import OperatorIcon from '../../operator-icon';
 import { CommonHandle } from './handle';
 import { RightHandleStyle } from './handle-icon';
-import styles from './index.less';
+import styles from './index.module.less';
 import { NodeWrapper } from './node-wrapper';
 
 // TODO: do not allow other nodes to connect to this node
@@ -23,7 +23,7 @@ function InnerFileNode({ data, id, selected }: NodeProps<IBeginNode>) {
   const inputs: Record<string, BeginQuery> = get(data, 'form.inputs', {});
 
   return (
-    <NodeWrapper selected={selected}>
+    <NodeWrapper selected={selected} id={id}>
       <CommonHandle
         type="source"
         position={Position.Right}
@@ -36,7 +36,7 @@ function InnerFileNode({ data, id, selected }: NodeProps<IBeginNode>) {
       <section className="flex items-center  gap-2">
         <OperatorIcon name={data.label as Operator}></OperatorIcon>
         <div className="truncate text-center font-semibold text-sm">
-          {t(`dataflow.begin`)}
+          {t(`flow.begin`)}
         </div>
       </section>
       <section className={cn(styles.generateParameters, 'flex gap-2 flex-col')}>

@@ -22,7 +22,7 @@ import pymysql
 import psycopg2
 import pyodbc
 from agent.tools.base import ToolParamBase, ToolBase, ToolMeta
-from api.utils.api_utils import timeout
+from common.connection_utils import timeout
 
 
 class ExeSQLParam(ToolParamBase):
@@ -53,7 +53,7 @@ class ExeSQLParam(ToolParamBase):
         self.max_records = 1024
 
     def check(self):
-        self.check_valid_value(self.db_type, "Choose DB type", ['mysql', 'postgres', 'mariadb', 'mssql', 'IBM DB2', 'trino'])
+        self.check_valid_value(self.db_type, "Choose DB type", ['mysql', 'postgres', 'mariadb', 'mssql', 'IBM DB2', 'trino', 'oceanbase'])
         self.check_empty(self.database, "Database name")
         self.check_empty(self.username, "database username")
         self.check_empty(self.host, "IP Address")
@@ -81,9 +81,17 @@ class ExeSQL(ToolBase, ABC):
 
     @timeout(int(os.environ.get("COMPONENT_EXEC_TIMEOUT", 60)))
     def _invoke(self, **kwargs):
+        if self.check_if_canceled("ExeSQL processing"):
+            return
 
         def convert_decimals(obj):
             from decimal import Decimal
+            import math
+            if isinstance(obj, float):
+                # Handle NaN and Infinity which are not valid JSON values
+                if math.isnan(obj) or math.isinf(obj):
+                    return None
+                return obj
             if isinstance(obj, Decimal):
                 return float(obj)  # 或 str(obj)
             elif isinstance(obj, dict):
@@ -95,6 +103,9 @@ class ExeSQL(ToolBase, ABC):
         sql = kwargs.get("sql")
         if not sql:
             raise Exception("SQL for `ExeSQL` MUST not be empty.")
+
+        if self.check_if_canceled("ExeSQL processing"):
+            return
 
         vars = self.get_input_elements_from_text(sql)
         args = {}
@@ -108,10 +119,16 @@ class ExeSQL(ToolBase, ABC):
             self.set_input_value(k, args[k])
         sql = self.string_format(sql, args)
 
+        if self.check_if_canceled("ExeSQL processing"):
+            return
+
         sqls = sql.split(";")
         if self._param.db_type in ["mysql", "mariadb"]:
             db = pymysql.connect(db=self._param.database, user=self._param.username, host=self._param.host,
                                  port=self._param.port, password=self._param.password)
+        elif self._param.db_type == 'oceanbase':
+            db = pymysql.connect(db=self._param.database, user=self._param.username, host=self._param.host,
+                                 port=self._param.port, password=self._param.password, charset='utf8mb4')
         elif self._param.db_type == 'postgres':
             db = psycopg2.connect(dbname=self._param.database, user=self._param.username, host=self._param.host,
                                   port=self._param.port, password=self._param.password)
@@ -181,6 +198,10 @@ class ExeSQL(ToolBase, ABC):
             sql_res = []
             formalized_content = []
             for single_sql in sqls:
+                if self.check_if_canceled("ExeSQL processing"):
+                    ibm_db.close(conn)
+                    return
+
                 single_sql = single_sql.replace("```", "").strip()
                 if not single_sql:
                     continue
@@ -190,6 +211,9 @@ class ExeSQL(ToolBase, ABC):
                 rows = []
                 row = ibm_db.fetch_assoc(stmt)
                 while row and len(rows) < self._param.max_records:
+                    if self.check_if_canceled("ExeSQL processing"):
+                        ibm_db.close(conn)
+                        return
                     rows.append(row)
                     row = ibm_db.fetch_assoc(stmt)
 
@@ -220,6 +244,11 @@ class ExeSQL(ToolBase, ABC):
         sql_res = []
         formalized_content = []
         for single_sql in sqls:
+            if self.check_if_canceled("ExeSQL processing"):
+                cursor.close()
+                db.close()
+                return
+
             single_sql = single_sql.replace('```','')
             if not single_sql:
                 continue
@@ -243,6 +272,9 @@ class ExeSQL(ToolBase, ABC):
 
             sql_res.append(convert_decimals(single_res.to_dict(orient='records')))
             formalized_content.append(single_res.to_markdown(index=False, floatfmt=".6f"))
+
+        cursor.close()
+        db.close()
 
         self.set_output("json", sql_res)
         self.set_output("formalized_content", "\n\n".join(formalized_content))

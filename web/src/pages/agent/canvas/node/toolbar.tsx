@@ -1,25 +1,30 @@
+import { Button, ButtonProps } from '@/components/ui/button';
 import {
   TooltipContent,
   TooltipNode,
   TooltipTrigger,
 } from '@/components/xyflow/tooltip-node';
+import { cn } from '@/lib/utils';
 import { Position } from '@xyflow/react';
 import { Copy, Play, Trash2 } from 'lucide-react';
-import {
-  HTMLAttributes,
-  MouseEventHandler,
-  PropsWithChildren,
-  useCallback,
-} from 'react';
+import { MouseEventHandler, PropsWithChildren, useCallback } from 'react';
 import { Operator } from '../../constant';
 import { useDuplicateNode } from '../../hooks';
 import useGraphStore from '../../store';
 
-function IconWrapper({ children, ...props }: HTMLAttributes<HTMLDivElement>) {
+function IconWrapper({ children, className, ...props }: ButtonProps) {
   return (
-    <div className="p-1.5 bg-text-title rounded-sm cursor-pointer" {...props}>
+    <Button
+      variant="secondary"
+      size="icon"
+      className={cn(
+        'size-7 p-0 bg-bg-component text-current hover:text-text-primary focus-visible:text-text-primary',
+        className,
+      )}
+      {...props}
+    >
       {children}
-    </div>
+    </Button>
   );
 }
 
@@ -44,10 +49,10 @@ export function ToolBar({
     (store) => store.deleteIterationNodeById,
   );
 
-  const deleteNode: MouseEventHandler<HTMLDivElement> = useCallback(
+  const deleteNode: MouseEventHandler<HTMLButtonElement> = useCallback(
     (e) => {
       e.stopPropagation();
-      if (label === Operator.Iteration) {
+      if ([Operator.Iteration, Operator.Loop].includes(label as Operator)) {
         deleteIterationNodeById(id);
       } else {
         deleteNodeById(id);
@@ -58,7 +63,7 @@ export function ToolBar({
 
   const duplicateNode = useDuplicateNode();
 
-  const handleDuplicate: MouseEventHandler<HTMLDivElement> = useCallback(
+  const handleDuplicate: MouseEventHandler<HTMLButtonElement> = useCallback(
     (e) => {
       e.stopPropagation();
       duplicateNode(id, label);
@@ -71,7 +76,7 @@ export function ToolBar({
       <TooltipTrigger className="h-full">{children}</TooltipTrigger>
 
       <TooltipContent position={Position.Top}>
-        <section className="flex gap-2 items-center">
+        <section className="flex gap-2 items-center text-text-secondary pb-2">
           {showRun && (
             <IconWrapper>
               <Play className="size-3.5" data-play />
@@ -82,7 +87,10 @@ export function ToolBar({
               <Copy className="size-3.5" />
             </IconWrapper>
           )}
-          <IconWrapper onClick={deleteNode}>
+          <IconWrapper
+            className="hover:text-state-error hover:border-state-error"
+            onClick={deleteNode}
+          >
             <Trash2 className="size-3.5" />
           </IconWrapper>
         </section>

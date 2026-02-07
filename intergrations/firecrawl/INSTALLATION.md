@@ -81,13 +81,13 @@ pip install ragflow-firecrawl-integration
 
 ## Configuration Options
 
-| Option | Description | Default | Required |
-|--------|-------------|---------|----------|
-| `api_key` | Your Firecrawl API key | - | Yes |
-| `api_url` | Firecrawl API endpoint | `https://api.firecrawl.dev` | No |
-| `max_retries` | Maximum retry attempts | 3 | No |
-| `timeout` | Request timeout (seconds) | 30 | No |
-| `rate_limit_delay` | Delay between requests (seconds) | 1.0 | No |
+| Option             | Description                      | Default                     | Required |
+|--------------------|----------------------------------|-----------------------------|----------|
+| `api_key`          | Your Firecrawl API key           | -                           | Yes      |
+| `api_url`          | Firecrawl API endpoint           | `https://api.firecrawl.dev` | No       |
+| `max_retries`      | Maximum retry attempts           | 3                           | No       |
+| `timeout`          | Request timeout (seconds)        | 30                          | No       |
+| `rate_limit_delay` | Delay between requests (seconds) | 1.0                         | No       |
 
 ## Environment Variables
 
@@ -131,7 +131,7 @@ python example_usage.py
 
 ```bash
 # Check RAGFlow server logs
-docker logs ragflow-server
+docker logs docker-ragflow-cpu-1
 
 # Look for messages like:
 # "Firecrawl plugin loaded successfully"

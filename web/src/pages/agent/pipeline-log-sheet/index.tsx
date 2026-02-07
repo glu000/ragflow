@@ -18,8 +18,8 @@ import {
   SquareArrowOutUpRight,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useParams } from 'react-router';
 import 'react18-json-view/src/style.css';
-import { useParams } from 'umi';
 import {
   isEndOutputEmpty,
   useDownloadOutput,
@@ -77,7 +77,7 @@ export function PipelineLogSheet({
                     uploadedFileData?.extension,
                 })}
               >
-                {t('dataflow.viewResult')} <ArrowUpRight />
+                {t('flow.viewResult')} <ArrowUpRight />
               </Button>
             )}
           </SheetTitle>
@@ -95,7 +95,7 @@ export function PipelineLogSheet({
               className="w-full mt-8 bg-state-error/10 text-state-error hover:bg-state-error hover:text-bg-base"
               onClick={handleCancel}
             >
-              <CirclePause /> {t('dataflow.cancel')}
+              <CirclePause /> {t('flow.cancel')}
             </Button>
           ) : (
             <Button
@@ -104,7 +104,7 @@ export function PipelineLogSheet({
               className="w-full mt-8 bg-accent-primary-5 text-text-secondary hover:bg-accent-primary-5  hover:text-accent-primary hover:border-accent-primary hover:border"
             >
               <SquareArrowOutUpRight />
-              {t('dataflow.exportJson')}
+              {t('flow.exportJson')}
             </Button>
           )}
         </div>

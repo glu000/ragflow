@@ -2,7 +2,7 @@ import { AgentCategory, AgentQuery } from '@/constants/agent';
 import { NavigateToDataflowResultProps } from '@/pages/dataflow-result/interface';
 import { Routes } from '@/routes';
 import { useCallback } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'umi';
+import { useNavigate, useParams, useSearchParams } from 'react-router';
 
 export enum QueryStringMap {
   KnowledgeId = 'knowledgeId',
@@ -14,9 +14,27 @@ export const useNavigatePage = () => {
   const [searchParams] = useSearchParams();
   const { id } = useParams();
 
-  const navigateToDatasetList = useCallback(() => {
-    navigate(Routes.Datasets);
-  }, [navigate]);
+  const navigateToDatasetList = useCallback(
+    ({ isCreate = false }: { isCreate?: boolean }) => {
+      if (isCreate) {
+        navigate(Routes.Datasets + '?isCreate=true');
+      } else {
+        navigate(Routes.Datasets);
+      }
+    },
+    [navigate],
+  );
+
+  const navigateToMemoryList = useCallback(
+    ({ isCreate = false }: { isCreate?: boolean }) => {
+      if (isCreate) {
+        navigate(Routes.Memories + '?isCreate=true');
+      } else {
+        navigate(Routes.Memories);
+      }
+    },
+    [navigate],
+  );
 
   const navigateToDataset = useCallback(
     (id: string) => () => {
@@ -77,13 +95,6 @@ export const useNavigatePage = () => {
     [navigate],
   );
 
-  const navigateToDataflow = useCallback(
-    (id: string) => () => {
-      navigate(`${Routes.DataFlow}/${id}`);
-    },
-    [navigate],
-  );
-
   const navigateToAgentLogs = useCallback(
     (id: string) => () => {
       navigate(`${Routes.AgentLogPage}/${id}`);
@@ -102,6 +113,12 @@ export const useNavigatePage = () => {
   const navigateToSearch = useCallback(
     (id: string) => () => {
       navigate(`${Routes.Search}/${id}`);
+    },
+    [navigate],
+  );
+  const navigateToMemory = useCallback(
+    (id: string) => () => {
+      navigate(`${Routes.Memory}${Routes.MemoryMessage}/${id}`);
     },
     [navigate],
   );
@@ -148,12 +165,21 @@ export const useNavigatePage = () => {
     [navigate],
   );
 
+  const navigateToDataSourceDetail = useCallback(
+    (id?: string) => {
+      navigate(
+        `${Routes.UserSetting}${Routes.DataSource}${Routes.DataSourceDetailPage}?id=${id}`,
+      );
+    },
+    [navigate],
+  );
+
   const navigateToDataflowResult = useCallback(
     (props: NavigateToDataflowResultProps) => () => {
       let params: string[] = [];
       Object.keys(props).forEach((key) => {
-        if (props[key]) {
-          params.push(`${key}=${props[key]}`);
+        if (props[key as keyof typeof props]) {
+          params.push(`${key}=${props[key as keyof typeof props]}`);
         }
       });
       navigate(
@@ -185,7 +211,9 @@ export const useNavigatePage = () => {
     navigateToAgentList,
     navigateToOldProfile,
     navigateToDataflowResult,
-    navigateToDataflow,
     navigateToDataFile,
+    navigateToDataSourceDetail,
+    navigateToMemory,
+    navigateToMemoryList,
   };
 };

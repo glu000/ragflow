@@ -19,24 +19,22 @@ import logging
 import uuid
 from functools import wraps
 from datetime import datetime
-from flask import request, jsonify
+
+from flask import jsonify, request
 from flask_login import current_user, login_user
 from itsdangerous.url_safe import URLSafeTimedSerializer as Serializer
 
-from api import settings
 from api.common.exceptions import AdminException, UserNotFoundError
-from api.db.init_data import encode_to_base64
+from api.common.base64 import encode_to_base64
 from api.db.services import UserService
-from api.db import ActiveEnum, StatusEnum
+from api.db import UserTenantRole
+from api.db.services.user_service import TenantService, UserTenantService
+from common.constants import ActiveEnum, StatusEnum
 from api.utils.crypt import decrypt
-from api.utils import (
-    current_timestamp,
-    datetime_format,
-    get_uuid,
-)
-from api.utils.api_utils import (
-    construct_response,
-)
+from common.misc_utils import get_uuid
+from common.time_utils import current_timestamp, datetime_format, get_format_time
+from common.connection_utils import sync_construct_response
+from common import settings
 
 
 def setup_auth(login_manager):
@@ -89,8 +87,44 @@ def init_default_admin():
         }
         if not UserService.save(**default_admin):
             raise AdminException("Can't init admin.", 500)
+        add_tenant_for_admin(default_admin, UserTenantRole.OWNER)
     elif not any([u.is_active == ActiveEnum.ACTIVE.value for u in users]):
         raise AdminException("No active admin. Please update 'is_active' in db manually.", 500)
+    else:
+        default_admin_rows = [u for u in users if u.email == "admin@ragflow.io"]
+        if default_admin_rows:
+            default_admin = default_admin_rows[0].to_dict()
+            exist, default_admin_tenant = TenantService.get_by_id(default_admin["id"])
+            if not exist:
+                add_tenant_for_admin(default_admin, UserTenantRole.OWNER)
+
+
+def add_tenant_for_admin(user_info: dict, role: str):
+    from api.db.services.tenant_llm_service import TenantLLMService
+    from api.db.services.llm_service import get_init_tenant_llm
+
+    tenant = {
+        "id": user_info["id"],
+        "name": user_info["nickname"] + "‘s Kingdom",
+        "llm_id": settings.CHAT_MDL,
+        "embd_id": settings.EMBEDDING_MDL,
+        "asr_id": settings.ASR_MDL,
+        "parser_ids": settings.PARSERS,
+        "img2txt_id": settings.IMAGE2TEXT_MDL
+    }
+    usr_tenant = {
+        "tenant_id": user_info["id"],
+        "user_id": user_info["id"],
+        "invited_by": user_info["id"],
+        "role": role
+    }
+
+    tenant_llm = get_init_tenant_llm(user_info["id"])
+    TenantService.insert(**tenant)
+    UserTenantService.insert(**usr_tenant)
+    TenantLLMService.insert_many(tenant_llm)
+    logging.info(
+        f"Added tenant for email: {user_info['email']}, A default tenant has been set; changing the default models after login is strongly recommended.")
 
 
 def check_admin_auth(func):
@@ -131,9 +165,10 @@ def login_admin(email: str, password: str):
     login_user(user)
     user.update_time = (current_timestamp(),)
     user.update_date = (datetime_format(datetime.now()),)
+    user.last_login_time = get_format_time()
     user.save()
     msg = "Welcome back!"
-    return construct_response(data=resp, auth=user.get_id(), message=msg)
+    return sync_construct_response(data=resp, auth=user.get_id(), message=msg)
 
 
 def check_admin(username: str, password: str):
@@ -173,17 +208,17 @@ def login_verify(f):
         username = auth.parameters['username']
         password = auth.parameters['password']
         try:
-            if check_admin(username, password) is False:
+            if not check_admin(username, password):
                 return jsonify({
                     "code": 500,
                     "message": "Access denied",
                     "data": None
                 }), 200
-        except Exception as e:
-            error_msg = str(e)
+        except Exception:
+            logging.exception("An error occurred during admin login verification.")
             return jsonify({
                 "code": 500,
-                "message": error_msg
+                "message": "An internal server error occurred."
             }), 200
 
         return f(*args, **kwargs)

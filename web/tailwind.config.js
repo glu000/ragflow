@@ -14,7 +14,7 @@ module.exports = {
       center: true,
       padding: '2rem',
       screens: {
-        '2xl': '1400px',
+        '2xl': '1536px',
       },
     },
     screens: {
@@ -22,11 +22,14 @@ module.exports = {
       md: '768px',
       lg: '1024px',
       xl: '1280px',
-      '2xl': '1400px',
+      '2xl': '1536px',
       '3xl': '1780px',
       '4xl': '1980px',
     },
     extend: {
+      borderWidth: {
+        0.5: '0.5px',
+      },
       colors: {
         border: 'var(--border-default)',
         input: 'hsl(var(--input))',
@@ -75,8 +78,18 @@ module.exports = {
         'bg-list': {
           DEFAULT: 'rgb(var(--bg-list) / <alpha-value>)',
         },
-        'text-primary': 'var(--text-primary)',
-        'text-secondary': 'var(--text-secondary)',
+        'text-primary': {
+          DEFAULT: 'rgb(var(--text-primary) / <alpha-value>)',
+        },
+        'text-primary-inverse': {
+          DEFAULT: 'rgb(var(--text-primary-inverse) / <alpha-value>)',
+        },
+        'text-secondary': {
+          DEFAULT: 'rgb(var(--text-secondary) / <alpha-value>)',
+        },
+        'text-secondary-inverse': {
+          DEFAULT: 'rgb(var(--text-secondary-inverse) / <alpha-value>)',
+        },
         'text-disabled': 'var(--text-disabled)',
         'text-input-tip': 'var(--text-input-tip)',
         'border-default': 'var(--border-default)',
@@ -175,7 +188,7 @@ module.exports = {
       },
       backgroundImage: {
         'metallic-gradient':
-          'linear-gradient(104deg, var(--text-primary) 30%, var(--metallic) 50%, var(--text-primary) 70%)',
+          'linear-gradient(104deg, rgb(var(--text-primary)) 30%, var(--metallic) 50%, rgb(var(--text-primary)) 70%)',
       },
       borderRadius: {
         lg: `var(--radius)`,
@@ -198,11 +211,16 @@ module.exports = {
           '0%,70%,100%': { opacity: '1' },
           '20%,50%': { opacity: '0' },
         },
+        'spin-reverse': {
+          from: { transform: 'rotate(0deg)' },
+          to: { transform: 'rotate(-360deg)' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         'caret-blink': 'caret-blink 1.25s ease-out infinite',
+        'spin-reverse': 'spin-reverse 1s linear infinite',
       },
     },
   },
@@ -210,5 +228,6 @@ module.exports = {
     require('tailwindcss-animate'),
     require('@tailwindcss/line-clamp'),
     require('tailwind-scrollbar'),
+    require('@tailwindcss/container-queries'),
   ],
 };

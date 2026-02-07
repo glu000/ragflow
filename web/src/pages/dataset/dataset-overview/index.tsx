@@ -128,6 +128,10 @@ const FileLogsPage: FC = () => {
     setTopAllData((prev) => {
       return {
         ...prev,
+        downloads: {
+          ...prev.downloads,
+          success: topData?.downloaded || 0,
+        },
         processing: {
           value: topData?.processing || 0,
           success: topData?.finished || 0,
@@ -263,7 +267,7 @@ const FileLogsPage: FC = () => {
               {topAllData.totalFiles.precent}%{' '}
             </span>
             <span className="font-normal text-text-secondary text-xs">
-              from last week
+              {t('knowledgeConfiguration.lastWeek')}
             </span>
           </div>
         </StatCard>

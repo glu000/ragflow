@@ -28,33 +28,38 @@ import {
   History,
   LaptopMinimalCheck,
   Logs,
+  MessageSquareCode,
   ScreenShare,
   Settings,
   Upload,
 } from 'lucide-react';
-import { ComponentPropsWithoutRef, useCallback, useState } from 'react';
+import { ComponentPropsWithoutRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'umi';
+import { useParams } from 'react-router';
 import AgentCanvas from './canvas';
 import { DropdownProvider } from './canvas/context';
 import { Operator } from './constant';
-import { PipelineLogContext } from './context';
+import { GlobalParamSheet } from './gobal-variable-sheet';
 import { useCancelCurrentDataflow } from './hooks/use-cancel-dataflow';
 import { useHandleExportJsonFile } from './hooks/use-export-json';
 import { useFetchDataOnMount } from './hooks/use-fetch-data';
 import { useFetchPipelineLog } from './hooks/use-fetch-pipeline-log';
 import { useGetBeginNodeDataInputs } from './hooks/use-get-begin-query';
 import { useIsPipeline } from './hooks/use-is-pipeline';
+import { useIsWebhookMode } from './hooks/use-is-webhook';
+import { useRunDataflow } from './hooks/use-run-dataflow';
 import {
   useSaveGraph,
   useSaveGraphBeforeOpeningDebugDrawer,
   useWatchAgentChange,
 } from './hooks/use-save-graph';
 import { PipelineLogSheet } from './pipeline-log-sheet';
+import PipelineRunSheet from './pipeline-run-sheet';
 import { SettingDialog } from './setting-dialog';
 import useGraphStore from './store';
 import { useAgentHistoryManager } from './use-agent-history-manager';
 import { VersionDialog } from './version-dialog';
+import WebhookSheet from './webhook-sheet';
 
 function AgentDropdownMenuItem({
   children,
@@ -107,13 +112,32 @@ export default function Agent() {
     useShowEmbedModal();
   const { navigateToAgentLogs } = useNavigatePage();
   const time = useWatchAgentChange(chatDrawerVisible);
+  const isWebhookMode = useIsWebhookMode();
 
   // pipeline
+
+  const {
+    visible: pipelineRunSheetVisible,
+    hideModal: hidePipelineRunSheet,
+    showModal: showPipelineRunSheet,
+  } = useSetModalState();
+
+  const {
+    visible: webhookTestSheetVisible,
+    hideModal: hideWebhookTestSheet,
+    showModal: showWebhookTestSheet,
+  } = useSetModalState();
 
   const {
     visible: pipelineLogSheetVisible,
     showModal: showPipelineLogSheet,
     hideModal: hidePipelineLogSheet,
+  } = useSetModalState();
+
+  const {
+    visible: globalParamSheetVisible,
+    showModal: showGlobalParamSheet,
+    hideModal: hideGlobalParamSheet,
   } = useSetModalState();
 
   const {
@@ -126,13 +150,11 @@ export default function Agent() {
     isLogEmpty,
   } = useFetchPipelineLog(pipelineLogSheetVisible);
 
-  const [uploadedFileData, setUploadedFileData] =
-    useState<Record<string, any>>();
   const findNodeByName = useGraphStore((state) => state.findNodeByName);
 
   const handleRunPipeline = useCallback(() => {
     if (!findNodeByName(Operator.Tokenizer)) {
-      message.warning(t('dataflow.tokenizerRequired'));
+      message.warning(t('flow.tokenizerRequired'));
       return;
     }
 
@@ -141,14 +163,15 @@ export default function Agent() {
       showPipelineLogSheet();
     } else {
       hidePipelineLogSheet();
-      handleRun();
+      // handleRun();
+      showPipelineRunSheet();
     }
   }, [
     findNodeByName,
-    handleRun,
     hidePipelineLogSheet,
     isParsing,
     showPipelineLogSheet,
+    showPipelineRunSheet,
     t,
   ]);
 
@@ -157,13 +180,29 @@ export default function Agent() {
     stopFetchTrace,
   });
 
-  const run = useCallback(() => {
-    if (isPipeline) {
+  const handleButtonRunClick = useCallback(() => {
+    if (isWebhookMode) {
+      saveGraph();
+      showWebhookTestSheet();
+    } else if (isPipeline) {
       handleRunPipeline();
     } else {
       handleRunAgent();
     }
-  }, [handleRunAgent, handleRunPipeline, isPipeline]);
+  }, [
+    handleRunAgent,
+    handleRunPipeline,
+    isPipeline,
+    isWebhookMode,
+    saveGraph,
+    showWebhookTestSheet,
+  ]);
+
+  const {
+    run: runPipeline,
+    loading: pipelineRunning,
+    uploadedFileData,
+  } = useRunDataflow({ showLogSheet: showPipelineLogSheet, setMessageId });
 
   return (
     <section className="h-full">
@@ -194,13 +233,20 @@ export default function Agent() {
           >
             <LaptopMinimalCheck /> {t('flow.save')}
           </ButtonLoading>
-          <Button variant={'secondary'} onClick={run}>
+          <ButtonLoading
+            variant={'secondary'}
+            onClick={() => showGlobalParamSheet()}
+            loading={loading}
+          >
+            <MessageSquareCode /> {t('flow.conversationVariable')}
+          </ButtonLoading>
+          <Button variant={'secondary'} onClick={handleButtonRunClick}>
             <CirclePlay />
             {t('flow.run')}
           </Button>
           <Button variant={'secondary'} onClick={showVersionDialog}>
             <History />
-            {t('flow.historyversion')}
+            {t('flow.historyVersion')}
           </Button>
           {isPipeline || (
             <Button
@@ -241,18 +287,14 @@ export default function Agent() {
           </DropdownMenu>
         </div>
       </PageHeader>
-      <PipelineLogContext.Provider
-        value={{ messageId, setMessageId, setUploadedFileData }}
-      >
-        <ReactFlowProvider>
-          <DropdownProvider>
-            <AgentCanvas
-              drawerVisible={chatDrawerVisible}
-              hideDrawer={hideChatDrawer}
-            ></AgentCanvas>
-          </DropdownProvider>
-        </ReactFlowProvider>
-      </PipelineLogContext.Provider>
+      <ReactFlowProvider>
+        <DropdownProvider>
+          <AgentCanvas
+            drawerVisible={chatDrawerVisible}
+            hideDrawer={hideChatDrawer}
+          ></AgentCanvas>
+        </DropdownProvider>
+      </ReactFlowProvider>
       {embedVisible && (
         <EmbedDialog
           visible={embedVisible}
@@ -283,6 +325,22 @@ export default function Agent() {
           messageId={messageId}
           uploadedFileData={uploadedFileData}
         ></PipelineLogSheet>
+      )}
+      {pipelineRunSheetVisible && (
+        <PipelineRunSheet
+          hideModal={hidePipelineRunSheet}
+          run={runPipeline}
+          loading={pipelineRunning}
+        ></PipelineRunSheet>
+      )}
+      {globalParamSheetVisible && (
+        <GlobalParamSheet
+          data={{}}
+          hideModal={hideGlobalParamSheet}
+        ></GlobalParamSheet>
+      )}
+      {webhookTestSheetVisible && (
+        <WebhookSheet hideModal={hideWebhookTestSheet}></WebhookSheet>
       )}
     </section>
   );

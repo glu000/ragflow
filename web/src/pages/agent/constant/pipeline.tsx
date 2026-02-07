@@ -49,7 +49,7 @@ export enum PptOutputFormat {
 }
 
 export enum VideoOutputFormat {
-  Json = 'json',
+  Text = 'text',
 }
 
 export enum AudioOutputFormat {
@@ -76,7 +76,7 @@ export const InitialOutputFormatMap = {
   [FileType.TextMarkdown]: TextMarkdownOutputFormat.Text,
   [FileType.Docx]: DocxOutputFormat.Json,
   [FileType.PowerPoint]: PptOutputFormat.Json,
-  [FileType.Video]: VideoOutputFormat.Json,
+  [FileType.Video]: VideoOutputFormat.Text,
   [FileType.Audio]: AudioOutputFormat.Text,
 };
 
@@ -85,6 +85,7 @@ export enum ContextGeneratorFieldName {
   Keywords = 'keywords',
   Questions = 'questions',
   Metadata = 'metadata',
+  TableOfContents = 'toc',
 }
 
 export const FileId = 'File'; // BeginId
@@ -169,6 +170,7 @@ export const initialParserValues = {
     {
       fileFormat: FileType.Spreadsheet,
       output_format: SpreadsheetOutputFormat.Html,
+      parse_method: ParseDocumentType.DeepDOC,
     },
     {
       fileFormat: FileType.Image,
@@ -192,6 +194,7 @@ export const initialParserValues = {
     {
       fileFormat: FileType.PowerPoint,
       output_format: PptOutputFormat.Json,
+      parse_method: ParseDocumentType.DeepDOC,
     },
   ],
 };
@@ -203,6 +206,7 @@ export const initialSplitterValues = {
   chunk_token_size: 512,
   overlapped_percent: 0,
   delimiters: [{ value: '\n' }],
+  image_table_context_window: 0,
 };
 
 export enum Hierarchy {
@@ -243,8 +247,8 @@ export const FileTypeSuffixMap = {
   [FileType.Email]: ['eml', 'msg'],
   [FileType.TextMarkdown]: ['md', 'markdown', 'mdx', 'txt'],
   [FileType.Docx]: ['doc', 'docx'],
-  [FileType.PowerPoint]: ['pptx'],
-  [FileType.Video]: [],
+  [FileType.PowerPoint]: ['pptx', 'ppt'],
+  [FileType.Video]: ['mp4', 'avi', 'mkv'],
   [FileType.Audio]: [
     'da',
     'wave',

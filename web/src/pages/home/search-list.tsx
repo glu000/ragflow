@@ -1,13 +1,20 @@
+import { HomeCard } from '@/components/home-card';
 import { IconFont } from '@/components/icon-font';
 import { MoreButton } from '@/components/more-button';
 import { RenameDialog } from '@/components/rename-dialog';
 import { useNavigatePage } from '@/hooks/logic-hooks/navigate-hooks';
+import { useEffect } from 'react';
 import { useFetchSearchList, useRenameSearch } from '../next-searches/hooks';
 import { SearchDropdown } from '../next-searches/search-dropdown';
-import { ApplicationCard } from './application-card';
 
-export function SearchList() {
-  const { data, refetch: refetchList } = useFetchSearchList();
+export function SearchList({
+  setListLength,
+  setLoading,
+}: {
+  setListLength: (length: number) => void;
+  setLoading?: (loading: boolean) => void;
+}) {
+  const { data, refetch: refetchList, isLoading } = useFetchSearchList();
   const { navigateToSearch } = useNavigatePage();
   const {
     openCreateModal,
@@ -22,16 +29,17 @@ export function SearchList() {
       refetchList();
     });
   };
+
+  useEffect(() => {
+    setListLength(data?.data?.search_apps?.length || 0);
+    setLoading?.(isLoading || false);
+  }, [data, setListLength, isLoading, setLoading]);
   return (
     <>
       {data?.data.search_apps.slice(0, 10).map((x) => (
-        <ApplicationCard
+        <HomeCard
           key={x.id}
-          app={{
-            avatar: x.avatar,
-            title: x.name,
-            update_time: x.update_time,
-          }}
+          data={x}
           onClick={navigateToSearch(x.id)}
           moreDropdown={
             <SearchDropdown
@@ -41,7 +49,7 @@ export function SearchList() {
               <MoreButton></MoreButton>
             </SearchDropdown>
           }
-        ></ApplicationCard>
+        ></HomeCard>
       ))}
       {openCreateModal && (
         <RenameDialog

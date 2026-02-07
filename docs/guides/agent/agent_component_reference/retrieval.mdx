@@ -1,8 +1,10 @@
 ---
 sidebar_position: 3
 slug: /retrieval_component
+sidebar_custom_props: {
+  categoryIcon: LucideFolderSearch
+}
 ---
-
 # Retrieval component
 
 A component that retrieves information from specified datasets.
@@ -38,7 +40,7 @@ By default, you can use `sys.query`, which is the user query and the default out
 
 ### 3. Select dataset(s) to query
 
-You can specify one or multiple datasets to retrieve data from. If selecting mutiple, ensure they use the same embedding model.
+You can specify one or multiple datasets to retrieve data from. If selecting multiple, ensure they use the same embedding model.
 
 ### 4. Expand **Advanced Settings** to configure the retrieval method
 
@@ -47,7 +49,7 @@ By default, a combination of weighted keyword similarity and weighted vector cos
 As a starter, you can skip this step to stay with the default retrieval method.
 
 :::caution WARNING
-Using a rerank model will *significantly* increase the system's response time. If you must use a rerank model, ensure you use a SaaS reranker; if you prefer a locally deployed rerank model, ensure you start RAGFlow with **docker-compose-gpu.yml**.
+Using a rerank model will *significantly* increase the system's response time.
 :::
 
 ### 5. Enable cross-language search
@@ -61,7 +63,7 @@ Click the **Run** button on the top of canvas to test the retrieval results.
 
 ### 7. Choose the next component
 
-When necessary, click the **+** button on the **Retrieval** component to choose the next component in the worflow from the dropdown list.
+When necessary, click the **+** button on the **Retrieval** component to choose the next component in the workflow from the dropdown list.
 
 
 ## Configurations
@@ -74,12 +76,14 @@ Select the query source for retrieval. Defaults to `sys.query`, which is the def
 
 The **Retrieval** component relies on query variables to specify its queries. All global variables defined before the **Retrieval** component can also be used as queries. Use the `(x)` button or type `/` to show all the available query variables.
 
-### Knowledge bases 
+### Retrieval from
 
-Select the dataset(s) to retrieve data from.
+Select the dataset(s) and memory to retrieve data from.
 
 - If no dataset is selected, meaning conversations with the agent will not be based on any dataset, ensure that the **Empty response** field is left blank to avoid an error.
 - If you select multiple datasets, you must ensure that the datasets you select use the same embedding model; otherwise, an error message would occur.
+
+![](https://raw.githubusercontent.com/infiniflow/ragflow-docs/main/images/retrieve_from_memory.PNG)
 
 ### Similarity threshold
 
@@ -140,6 +144,5 @@ The global variable name for the output of the **Retrieval** component, which ca
 
 Go through the checklist below for best performance:
 
-- Leave the **Rerank model** field empty.
-- If you must use a rerank model, ensure you use a SaaS reranker; if you prefer a locally deployed rerank model, ensure you start RAGFlow with **docker-compose-gpu.yml**.
+- Leave the **Rerank model** field empty to disable rerank.
 - Disable **Use knowledge graph**.

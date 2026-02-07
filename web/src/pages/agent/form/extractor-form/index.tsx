@@ -47,7 +47,7 @@ const ExtractorForm = ({ node }: INextOperatorForm) => {
 
   const promptOptions = useBuildNodeOutputOptions(node?.id);
 
-  const options = buildOptions(ContextGeneratorFieldName, t, 'dataflow');
+  const options = buildOptions(ContextGeneratorFieldName, t, 'flow');
 
   const {
     handleFieldNameChange,
@@ -59,11 +59,13 @@ const ExtractorForm = ({ node }: INextOperatorForm) => {
 
   useWatchFormChange(node?.id, form);
 
+  const isToc = form.getValues('field_name') === 'toc';
+
   return (
     <Form {...form}>
       <FormWrapper>
         <LargeModelFormField></LargeModelFormField>
-        <RAGFlowFormItem label={t('dataflow.fieldName')} name="field_name">
+        <RAGFlowFormItem label={t('flow.fieldName')} name="field_name">
           {(field) => (
             <SelectWithSearch
               onChange={(value) => {
@@ -76,24 +78,32 @@ const ExtractorForm = ({ node }: INextOperatorForm) => {
             ></SelectWithSearch>
           )}
         </RAGFlowFormItem>
-        <RAGFlowFormItem label={t('flow.systemPrompt')} name="sys_prompt">
+
+        {!isToc && (
+          <RAGFlowFormItem label={t('flow.systemPrompt')} name="sys_prompt">
+            <PromptEditor
+              placeholder={t('flow.messagePlaceholder')}
+              showToolbar={true}
+              baseOptions={promptOptions}
+            ></PromptEditor>
+          </RAGFlowFormItem>
+        )}
+
+        <RAGFlowFormItem
+          label={isToc ? t('flow.tocDataSource') : t('flow.userPrompt')}
+          name="prompts"
+        >
           <PromptEditor
-            placeholder={t('flow.messagePlaceholder')}
             showToolbar={true}
             baseOptions={promptOptions}
           ></PromptEditor>
         </RAGFlowFormItem>
-        <RAGFlowFormItem label={t('flow.userPrompt')} name="prompts">
-          <PromptEditor
-            showToolbar={true}
-            baseOptions={promptOptions}
-          ></PromptEditor>
-        </RAGFlowFormItem>
+
         <Output list={outputList}></Output>
       </FormWrapper>
       {visible && (
         <ConfirmDeleteDialog
-          title={t('dataflow.switchPromptMessage')}
+          title={t('flow.switchPromptMessage')}
           open
           onOpenChange={hideModal}
           onOk={confirmSwitch}

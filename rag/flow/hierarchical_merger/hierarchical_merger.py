@@ -13,20 +13,20 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+import asyncio
+import logging
 import random
 import re
 from copy import deepcopy
 from functools import partial
 
-import trio
-
-from api.utils import get_uuid
-from api.utils.base64_image import id2image, image2id
+from common.misc_utils import get_uuid
+from rag.utils.base64_image import id2image, image2id
 from deepdoc.parser.pdf_parser import RAGFlowPdfParser
 from rag.flow.base import ProcessBase, ProcessParamBase
 from rag.flow.hierarchical_merger.schema import HierarchicalMergerFromUpstream
 from rag.nlp import concat_img
-from rag.utils.storage_factory import STORAGE_IMPL
+from common import settings
 
 
 class HierarchicalMergerParam(ProcessParamBase):
@@ -143,8 +143,6 @@ class HierarchicalMerger(ProcessBase):
                 if depth == self._param.hierarchy:
                     all_pathes.append(_path)
 
-        for i in range(len(lines)):
-            print(i, lines[i])
         dfs(root, [], 0)
 
         if root["texts"]:
@@ -166,7 +164,7 @@ class HierarchicalMerger(ProcessBase):
                 img = None
                 for i in path:
                     txt += lines[i] + "\n"
-                    concat_img(img, id2image(section_images[i], partial(STORAGE_IMPL.get, tenant_id=self._canvas._tenant_id)))
+                    concat_img(img, id2image(section_images[i], partial(settings.STORAGE_IMPL.get, tenant_id=self._canvas._tenant_id)))
                 cks.append(txt)
                 images.append(img)
 
@@ -178,9 +176,18 @@ class HierarchicalMerger(ProcessBase):
                 }
                 for c, img in zip(cks, images)
             ]
-            async with trio.open_nursery() as nursery:
-                for d in cks:
-                    nursery.start_soon(image2id, d, partial(STORAGE_IMPL.put, tenant_id=self._canvas._tenant_id), get_uuid())
+            tasks = []
+            for d in cks:
+                tasks.append(asyncio.create_task(image2id(d, partial(settings.STORAGE_IMPL.put, tenant_id=self._canvas._tenant_id), get_uuid())))
+            try:
+                await asyncio.gather(*tasks, return_exceptions=False)
+            except Exception as e:
+                logging.error(f"Error in image2id: {e}")
+                for t in tasks:
+                    t.cancel()
+                await asyncio.gather(*tasks, return_exceptions=True)
+                raise
+
             self.set_output("chunks", cks)
 
         self.callback(1, "Done.")

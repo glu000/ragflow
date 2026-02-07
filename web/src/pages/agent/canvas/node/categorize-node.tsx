@@ -1,8 +1,8 @@
-import LLMLabel from '@/components/llm-select/llm-label';
 import { ICategorizeNode } from '@/interfaces/database/flow';
 import { NodeProps, Position } from '@xyflow/react';
 import { get } from 'lodash';
 import { memo } from 'react';
+import { LLMLabelCard } from './card';
 import { CommonHandle, LeftEndHandle } from './handle';
 import { RightHandleStyle } from './handle-icon';
 import NodeHeader from './node-header';
@@ -18,15 +18,13 @@ export function InnerCategorizeNode({
   const { positions } = useBuildCategorizeHandlePositions({ data, id });
   return (
     <ToolBar selected={selected} id={id} label={data.label}>
-      <NodeWrapper selected={selected}>
+      <NodeWrapper selected={selected} id={id}>
         <LeftEndHandle></LeftEndHandle>
 
         <NodeHeader id={id} name={data.name} label={data.label}></NodeHeader>
 
         <section className="flex flex-col gap-2">
-          <div className={'bg-bg-card rounded-sm px-1'}>
-            <LLMLabel value={get(data, 'form.llm_id')}></LLMLabel>
-          </div>
+          <LLMLabelCard llmId={get(data, 'form.llm_id')}></LLMLabelCard>
           {positions.map((position) => {
             return (
               <div key={position.uuid}>

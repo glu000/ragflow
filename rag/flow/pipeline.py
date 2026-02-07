@@ -13,12 +13,12 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
+import asyncio
 import datetime
 import json
 import logging
 import random
 from timeit import default_timer as timer
-import trio
 from agent.canvas import Graph
 from api.db.services.document_service import DocumentService
 from api.db.services.task_service import has_canceled, TaskService, CANVAS_DEBUG_DOC_ID
@@ -41,7 +41,7 @@ class Pipeline(Graph):
                 self._doc_id = None
 
     def callback(self, component_name: str, progress: float | int | None = None, message: str = "") -> None:
-        from rag.svr.task_executor import TaskCanceledException
+        from common.exceptions import TaskCanceledException
         log_key = f"{self._flow_id}-{self.task_id}-logs"
         timestamp = timer()
         if has_canceled(self.task_id):
@@ -152,8 +152,9 @@ class Pipeline(Graph):
                 #else:
                 #    cpn_obj.invoke(**last_cpn.output())
 
-            async with trio.open_nursery() as nursery:
-                nursery.start_soon(invoke)
+            tasks = []
+            tasks.append(asyncio.create_task(invoke()))
+            await asyncio.gather(*tasks)
 
             if cpn_obj.error():
                 self.error = "[ERROR]" + cpn_obj.error()
