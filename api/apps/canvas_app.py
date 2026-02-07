@@ -51,7 +51,7 @@ from rag.utils.redis_conn import REDIS_CONN
 @manager.route('/templates', methods=['GET'])  # noqa: F821
 @login_required
 def templates():
-    return get_json_result(data=[c.to_dict() for c in CanvasTemplateService.query(canvas_category=CanvasCategory.Agent)])
+    return get_json_result(data=[c.to_dict() for c in CanvasTemplateService.get_all()])
 
 
 @manager.route('/rm', methods=['POST'])  # noqa: F821
@@ -408,6 +408,49 @@ def test_db_connect():
             stmt = ibm_db.exec_immediate(conn, "SELECT 1 FROM sysibm.sysdummy1")
             ibm_db.fetch_assoc(stmt)
             ibm_db.close(conn)
+            return get_json_result(data="Database Connection Successful!")
+        elif req["db_type"] == 'trino':
+            def _parse_catalog_schema(db: str):
+                if not db:
+                    return None, None
+                if "." in db:
+                    c, s = db.split(".", 1)
+                elif "/" in db:
+                    c, s = db.split("/", 1)
+                else:
+                    c, s = db, "default"
+                return c, s
+            try:
+                import trino
+                import os
+                from trino.auth import BasicAuthentication
+            except Exception:
+                return server_error_response("Missing dependency 'trino'. Please install: pip install trino")
+
+            catalog, schema = _parse_catalog_schema(req["database"])
+            if not catalog:
+                return server_error_response("For Trino, 'database' must be 'catalog.schema' or at least 'catalog'.")
+            
+            http_scheme = "https" if os.environ.get("TRINO_USE_TLS", "0") == "1" else "http"
+
+            auth = None
+            if http_scheme == "https" and req.get("password"):
+                auth = BasicAuthentication(req.get("username") or "ragflow", req["password"])
+
+            conn = trino.dbapi.connect(
+                host=req["host"],
+                port=int(req["port"] or 8080),
+                user=req["username"] or "ragflow",
+                catalog=catalog,
+                schema=schema or "default",
+                http_scheme=http_scheme,
+                auth=auth
+            )
+            cur = conn.cursor()
+            cur.execute("SELECT 1")
+            cur.fetchall()
+            cur.close()
+            conn.close()
             return get_json_result(data="Database Connection Successful!")
         else:
             return server_error_response("Unsupported database type.")

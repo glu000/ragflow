@@ -12,6 +12,7 @@ import { RunningStatus } from '../dataset/constant';
 import { LogTabs } from './dataset-common';
 import { DatasetFilter } from './dataset-filter';
 import { useFetchFileLogList, useFetchOverviewTital } from './hook';
+import { DocumentLog, IFileLogItem } from './interface';
 import FileLogsTable from './overview-table';
 
 interface StatCardProps {
@@ -24,6 +25,8 @@ interface StatCardProps {
 interface CardFooterProcessProps {
   success: number;
   failed: number;
+  successTip?: string;
+  failedTip?: string;
 }
 
 const StatCard: FC<StatCardProps> = ({
@@ -56,7 +59,9 @@ const StatCard: FC<StatCardProps> = ({
 
 const CardFooterProcess: FC<CardFooterProcessProps> = ({
   success = 0,
+  successTip,
   failed = 0,
+  failedTip,
 }) => {
   const { t } = useTranslation();
   return (
@@ -65,8 +70,13 @@ const CardFooterProcess: FC<CardFooterProcessProps> = ({
         <div className="flex items-center justify-between  rounded-md w-1/2 p-2 bg-state-success-5">
           <div className="flex items-center rounded-lg gap-1">
             <div className="w-2 h-2 rounded-full bg-state-success "></div>
-            <div className="font-normal text-text-secondary text-xs">
+            <div className="font-normal text-text-secondary text-xs flex items-center gap-1">
               {t('knowledgeDetails.success')}
+              {successTip && (
+                <AntToolTip title={successTip} trigger="hover">
+                  <CircleQuestionMark size={12} />
+                </AntToolTip>
+              )}
             </div>
           </div>
           <div>{success || 0}</div>
@@ -74,8 +84,13 @@ const CardFooterProcess: FC<CardFooterProcessProps> = ({
         <div className="flex items-center justify-between rounded-md w-1/2 bg-state-error-5 p-2">
           <div className="flex items-center rounded-lg gap-1">
             <div className="w-2 h-2 rounded-full bg-state-error"></div>
-            <div className="font-normal text-text-secondary text-xs">
+            <div className="font-normal text-text-secondary text-xs flex items-center gap-1">
               {t('knowledgeDetails.failed')}
+              {failedTip && (
+                <AntToolTip title={failedTip} trigger="hover">
+                  <CircleQuestionMark size={12} />
+                </AntToolTip>
+              )}
             </div>
           </div>
           <div>{failed || 0}</div>
@@ -198,18 +213,25 @@ const FileLogsPage: FC = () => {
       return tableOriginData.logs.map((item) => {
         return {
           ...item,
-          fileName: item.document_name,
-          statusName: item.operation_status,
-        };
+          status: item.operation_status as RunningStatus,
+          statusName: RunningStatusMap[item.operation_status as RunningStatus],
+        } as unknown as IFileLogItem & DocumentLog;
       });
     }
+    return [];
   }, [tableOriginData]);
 
   const changeActiveLogs = (active: (typeof LogTabs)[keyof typeof LogTabs]) => {
     setFilterValue({});
     setActive(active);
   };
-  const handlePaginationChange = (page: number, pageSize: number) => {
+  const handlePaginationChange = ({
+    page,
+    pageSize,
+  }: {
+    page: number;
+    pageSize: number;
+  }) => {
     console.log('Pagination changed:', { page, pageSize });
     setPagination({
       ...pagination,
@@ -259,7 +281,9 @@ const FileLogsPage: FC = () => {
         >
           <CardFooterProcess
             success={topAllData.downloads.success}
+            successTip={t('datasetOverview.downloadSuccessTip')}
             failed={topAllData.downloads.failed}
+            failedTip={t('datasetOverview.downloadFailedTip')}
           />
         </StatCard>
         <StatCard
@@ -276,7 +300,9 @@ const FileLogsPage: FC = () => {
         >
           <CardFooterProcess
             success={topAllData.processing.success}
+            successTip={t('datasetOverview.processingSuccessTip')}
             failed={topAllData.processing.failed}
+            failedTip={t('datasetOverview.processingFailedTip')}
           />
         </StatCard>
       </div>

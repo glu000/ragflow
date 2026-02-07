@@ -21,7 +21,6 @@ import '@xyflow/react/dist/style.css';
 import { NotebookPen } from 'lucide-react';
 import { memo, useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AgentBackground } from '../components/background';
 import { AgentInstanceContext, HandleContext } from '../context';
 
 import FormSheet from '../form-sheet/next';
@@ -31,6 +30,8 @@ import { useBeforeDelete } from '../hooks/use-before-delete';
 import { useMoveNote } from '../hooks/use-move-note';
 import { useDropdownManager } from './context';
 
+import { AgentBackground } from '@/components/canvas/background';
+import Spotlight from '@/components/spotlight';
 import { useRunDataflow } from '../hooks/use-run-dataflow';
 import {
   useHideFormSheetOnNodeDeletion,
@@ -44,7 +45,6 @@ import { RagNode } from './node';
 import { BeginNode } from './node/begin-node';
 import { NextStepDropdown } from './node/dropdown/next-step-dropdown';
 import { ExtractorNode } from './node/extractor-node';
-import { HierarchicalMergerNode } from './node/hierarchical-merger-node';
 import NoteNode from './node/note-node';
 import ParserNode from './node/parser-node';
 import { SplitterNode } from './node/splitter-node';
@@ -57,7 +57,6 @@ export const nodeTypes: NodeTypes = {
   parserNode: ParserNode,
   tokenizerNode: TokenizerNode,
   splitterNode: SplitterNode,
-  hierarchicalMergerNode: HierarchicalMergerNode,
   contextNode: ExtractorNode,
 };
 
@@ -204,7 +203,7 @@ function DataFlowCanvas({ drawerVisible, hideDrawer, showLogSheet }: IProps) {
   };
 
   return (
-    <div className={styles.canvasWrapper}>
+    <div className={cn(styles.canvasWrapper, 'px-5 pb-5')}>
       <svg
         xmlns="http://www.w3.org/2000/svg"
         style={{ position: 'absolute', top: 10, left: 0 }}
@@ -263,6 +262,7 @@ function DataFlowCanvas({ drawerVisible, hideDrawer, showLogSheet }: IProps) {
           onBeforeDelete={handleBeforeDelete}
         >
           <AgentBackground></AgentBackground>
+          <Spotlight className="z-0" opcity={0.7} coverage={70} />
           <Controls position={'bottom-center'} orientation="horizontal">
             <ControlButton>
               <Tooltip>
@@ -290,6 +290,7 @@ function DataFlowCanvas({ drawerVisible, hideDrawer, showLogSheet }: IProps) {
                 clearActiveDropdown();
               }}
               position={dropdownPosition}
+              nodeId={connectionStartRef.current?.nodeId || ''}
             >
               <span></span>
             </NextStepDropdown>

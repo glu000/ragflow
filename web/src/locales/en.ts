@@ -57,6 +57,8 @@ export default {
       },
     },
     login: {
+      loginTitle: 'Sign in to Your Account',
+      signUpTitle: 'Create an Account',
       login: 'Sign in',
       signUp: 'Sign up',
       loginDescription: 'We’re so excited to see you again!',
@@ -72,7 +74,8 @@ export default {
       nicknamePlaceholder: 'Please input nickname',
       register: 'Create an account',
       continue: 'Continue',
-      title: 'Start building your smart assistants.',
+      title: 'A leading RAG engine for LLM context',
+      start: "Let's get started",
       description:
         'Sign up for free to explore top RAG technology. Create knowledge bases and AIs to empower your business.',
       review: 'from 500+ reviews',
@@ -112,11 +115,11 @@ export default {
       generateKnowledgeGraph:
         'This will extract entities and relationships from all your documents in this dataset. The process may take a while to complete.',
       generateRaptor:
-        'This will extract entities and relationships from all your documents in this dataset. The process may take a while to complete.',
+        'Performs recursive clustering and summarization of document chunks to build a hierarchical tree structure, enabling more context-aware retrieval across lengthy documents.',
       generate: 'Generate',
-      raptor: 'Raptor',
+      raptor: 'RAPTOR',
       processingType: 'Processing Type',
-      dataPipeline: 'Data Pipeline',
+      dataPipeline: 'Ingestion pipeline',
       operations: 'Operations',
       taskId: 'Task ID',
       duration: 'Duration',
@@ -126,9 +129,9 @@ export default {
       startDate: 'Start Date',
       source: 'Source',
       fileName: 'File Name',
-      datasetLogs: 'Dataset Logs',
-      fileLogs: 'File Logs',
-      overview: 'Overview',
+      datasetLogs: 'Dataset',
+      fileLogs: 'File',
+      overview: 'Logs',
       success: 'Success',
       failed: 'Failed',
       completed: 'Completed',
@@ -270,6 +273,9 @@ export default {
       reRankModelWaring: 'Re-rank model is very time consuming.',
     },
     knowledgeConfiguration: {
+      tocExtraction: 'TOC Enhance',
+      tocExtractionTip:
+        " For existing chunks, generate a hierarchical table of contents (one directory per file). During queries, when Directory Enhancement is activated, the system will use a large model to determine which directory items are relevant to the user's question, thereby identifying the relevant chunks.",
       deleteGenerateModalContent: `
         <p>Deleting the generated <strong class='text-text-primary'>{{type}}</strong>  results 
         will remove all derived entities and relationships from this dataset. 
@@ -284,18 +290,18 @@ export default {
       fileFilter: 'File Filter',
       setDefaultTip: '',
       setDefault: 'Set as Default',
-      eidtLinkDataPipeline: 'Edit Data Pipeline',
-      linkPipelineSetTip: 'Manage data pipeline linkage with this dataset',
+      eidtLinkDataPipeline: 'Edit Ingestion pipeline',
+      linkPipelineSetTip: 'Manage Ingestion pipeline linkage with this dataset',
       default: 'Default',
-      dataPipeline: 'Data Pipeline',
-      linkDataPipeline: 'Link Data Pipeline',
+      dataPipeline: 'Ingestion pipeline',
+      linkDataPipeline: 'Link Ingestion pipeline',
       enableAutoGenerate: 'Enable Auto Generate',
       teamPlaceholder: 'Please select a team.',
       dataFlowPlaceholder: 'Please select a pipeline.',
       buildItFromScratch: 'Build it from scratch',
       dataFlow: 'Pipeline',
-      parseType: 'Parse Type',
-      manualSetup: 'Manual Setup',
+      parseType: 'Ingestion pipeline',
+      manualSetup: 'Choose pipeline',
       builtIn: 'Built-in',
       titleDescription:
         'Update your knowledge base configuration here, particularly the chunking method.',
@@ -471,8 +477,9 @@ This auto-tagging feature enhances retrieval by adding another layer of domain-s
       useGraphRagTip:
         'Construct a knowledge graph over file chunks of the current knowledge base to enhance multi-hop question-answering involving nested logic. See https://ragflow.io/docs/dev/construct_knowledge_graph for details.',
       graphRagMethod: 'Method',
-      graphRagMethodTip: `Light: (Default) Use prompts provided by github.com/HKUDS/LightRAG to extract entities and relationships. This option consumes fewer tokens, less memory, and fewer computational resources.</br>
-        General: Use prompts provided by github.com/microsoft/graphrag to extract entities and relationships`,
+      graphRagMethodTip: `
+      Light: (Default) Use prompts provided by github.com/HKUDS/LightRAG to extract entities and relationships. This option consumes fewer tokens, less memory, and fewer computational resources.</br>
+      General: Use prompts provided by github.com/microsoft/graphrag to extract entities and relationships`,
       resolution: 'Entity resolution',
       resolutionTip: `An entity deduplication switch. When enabled, the LLM will combine similar entities - e.g., '2025' and 'the year of 2025', or 'IT' and 'Information Technology' - to construct a more accurate graph`,
       community: 'Community reports',
@@ -948,6 +955,7 @@ This auto-tagging feature enhances retrieval by adding another layer of domain-s
       marketing: 'Marketing',
       consumerApp: 'Consumer App',
       other: 'Other',
+      ingestionPipeline: 'Ingestion Pipeline',
       agents: 'Agents',
       days: 'Days',
       beginInput: 'Begin Input',
@@ -1595,7 +1603,7 @@ This delimiter is used to split the input text into several text pieces echo of 
       createFromTemplate: 'Create from template',
       importJsonFile: 'Import JSON file',
       ceateAgent: 'Agent flow',
-      createPipeline: 'Data pipeline',
+      createPipeline: 'Ingestion pipeline',
       chooseAgentType: 'Choose Agent Type',
     },
     llmTools: {
@@ -1666,6 +1674,7 @@ This delimiter is used to split the input text into several text pieces echo of 
       page: '{{page}} /Page',
     },
     dataflowParser: {
+      result: 'Result',
       parseSummary: 'Parse Summary',
       parseSummaryTip: 'Parser：deepdoc',
       rerunFromCurrentStep: 'Rerun From Current Step',
@@ -1688,9 +1697,9 @@ This delimiter is used to split the input text into several text pieces echo of 
       <p>To keep them, please click Rerun to re-run the current stage.</p> `,
       changeStepModalConfirmText: 'Switch Anyway',
       changeStepModalCancelText: 'Cancel',
-      unlinkPipelineModalTitle: 'Unlink data pipeline',
+      unlinkPipelineModalTitle: 'Unlink Ingestion pipeline',
       unlinkPipelineModalContent: `
-      <p>Once unlinked, this Dataset will no longer be connected to the current Data Pipeline.</p> 
+      <p>Once unlinked, this Dataset will no longer be connected to the current Ingestion pipeline.</p> 
       <p>Files that are already being parsed  will continue until completion</p> 
       <p>Files that are not yet parsed will no longer be processed</p> <br/>
       <p>Are you sure you want to proceed?</p> `,
@@ -1700,17 +1709,17 @@ This delimiter is used to split the input text into several text pieces echo of 
       parser: 'Parser',
       parserDescription:
         'Extracts raw text and structure from files for downstream processing.',
-      tokenizer: 'Tokenizer',
-      tokenizerRequired: 'Please add the Tokenizer node first',
+      tokenizer: 'Indexer',
+      tokenizerRequired: 'Please add the Indexer node first',
       tokenizerDescription:
         'Transforms text into the required data structure (e.g., vector embeddings for Embedding Search) depending on the chosen search method.',
-      splitter: 'Token Splitter',
+      splitter: 'Token',
       splitterDescription:
         'Split text into chunks by token length with optional delimiters and overlap.',
       hierarchicalMergerDescription:
         'Split documents into sections by title hierarchy with regex rules for finer control.',
-      hierarchicalMerger: 'Title Splitter',
-      extractor: 'Context Generator',
+      hierarchicalMerger: 'Title',
+      extractor: 'Transformer',
       extractorDescription:
         'Use an LLM to extract structured insights from document chunks—such as summaries, classifications, etc.',
       outputFormat: 'Output format',
@@ -1730,10 +1739,10 @@ This delimiter is used to split the input text into several text pieces echo of 
       addParser: 'Add Parser',
       hierarchy: 'Hierarchy',
       regularExpressions: 'Regular Expressions',
-      overlappedPercent: 'Overlapped percent',
+      overlappedPercent: 'Overlapped percent (%)',
       searchMethod: 'Search method',
       searchMethodTip: `Defines how the content can be searched — by full-text, embedding, or both.
-The Tokenizer will store the content in the corresponding data structures for the selected methods.`,
+The Indexer will store the content in the corresponding data structures for the selected methods.`,
       begin: 'File',
       parserMethod: 'Parsing method',
       systemPrompt: 'System Prompt',
@@ -1742,11 +1751,11 @@ The Tokenizer will store the content in the corresponding data structures for th
       exportJson: 'Export JSON',
       viewResult: 'View result',
       running: 'Running',
-      summary: 'Augmented Context',
+      summary: 'Summary',
       keywords: 'Keywords',
       questions: 'Questions',
       metadata: 'Metadata',
-      fieldName: 'Result Destination',
+      fieldName: 'Result destination',
       prompts: {
         system: {
           keywords: `Role
@@ -1811,12 +1820,19 @@ Important structured information may include: names, dates, locations, events, k
       imageParseMethodOptions: {
         ocr: 'OCR',
       },
+      note: 'Note',
+      noteDescription: 'Note',
+      notePlaceholder: 'Please enter a note',
     },
     datasetOverview: {
       downloadTip: 'Files being downloaded from data sources. ',
-      processingTip: 'Files being processed by data flows.',
+      processingTip: 'Files being processed by Ingestion pipeline.',
       totalFiles: 'Total Files',
       downloading: 'Downloading',
+      downloadSuccessTip: 'Total successful downloads',
+      downloadFailedTip: 'Total failed downloads',
+      processingSuccessTip: 'Total successfully processed files',
+      processingFailedTip: 'Total failed processes',
       processing: 'Processing',
     },
   },

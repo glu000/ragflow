@@ -1,4 +1,4 @@
-import { useIsDarkTheme, useTheme } from '@/components/theme-provider';
+import { useTheme } from '@/components/theme-provider';
 import {
   Tooltip,
   TooltipContent,
@@ -19,7 +19,6 @@ import { NotebookPen } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChatSheet } from '../chat/chat-sheet';
-import { AgentBackground } from '../components/background';
 import {
   AgentChatContext,
   AgentChatLogContext,
@@ -42,6 +41,7 @@ import { useMoveNote } from '../hooks/use-move-note';
 import { usePlaceholderManager } from '../hooks/use-placeholder-manager';
 import { useDropdownManager } from './context';
 
+import { AgentBackground } from '@/components/canvas/background';
 import Spotlight from '@/components/spotlight';
 import {
   useHideFormSheetOnNodeDeletion,
@@ -56,20 +56,24 @@ import { RagNode } from './node';
 import { AgentNode } from './node/agent-node';
 import { BeginNode } from './node/begin-node';
 import { CategorizeNode } from './node/categorize-node';
-import { InnerNextStepDropdown } from './node/dropdown/next-step-dropdown';
+import { NextStepDropdown } from './node/dropdown/next-step-dropdown';
+import { ExtractorNode } from './node/extractor-node';
+import { FileNode } from './node/file-node';
 import { GenerateNode } from './node/generate-node';
 import { InvokeNode } from './node/invoke-node';
 import { IterationNode, IterationStartNode } from './node/iteration-node';
 import { KeywordNode } from './node/keyword-node';
-import { LogicNode } from './node/logic-node';
 import { MessageNode } from './node/message-node';
 import NoteNode from './node/note-node';
+import ParserNode from './node/parser-node';
 import { PlaceholderNode } from './node/placeholder-node';
 import { RelevantNode } from './node/relevant-node';
 import { RetrievalNode } from './node/retrieval-node';
 import { RewriteNode } from './node/rewrite-node';
+import { SplitterNode } from './node/splitter-node';
 import { SwitchNode } from './node/switch-node';
 import { TemplateNode } from './node/template-node';
+import TokenizerNode from './node/tokenizer-node';
 import { ToolNode } from './node/tool-node';
 
 export const nodeTypes: NodeTypes = {
@@ -78,7 +82,6 @@ export const nodeTypes: NodeTypes = {
   beginNode: BeginNode,
   placeholderNode: PlaceholderNode,
   relevantNode: RelevantNode,
-  logicNode: LogicNode,
   noteNode: NoteNode,
   switchNode: SwitchNode,
   generateNode: GenerateNode,
@@ -93,6 +96,11 @@ export const nodeTypes: NodeTypes = {
   iterationStartNode: IterationStartNode,
   agentNode: AgentNode,
   toolNode: ToolNode,
+  fileNode: FileNode,
+  parserNode: ParserNode,
+  tokenizerNode: TokenizerNode,
+  splitterNode: SplitterNode,
+  contextNode: ExtractorNode,
 };
 
 const edgeTypes = {
@@ -173,8 +181,6 @@ function AgentCanvas({ drawerVisible, hideDrawer }: IProps) {
     }
   };
 
-  const isDarkTheme = useIsDarkTheme();
-
   useHideFormSheetOnNodeDeletion({ hideFormDrawer });
 
   const { visible, hideModal, showModal } = useSetModalState();
@@ -198,6 +204,7 @@ function AgentCanvas({ drawerVisible, hideDrawer }: IProps) {
     getConnectionStartContext,
     shouldPreventClose,
     onMove,
+    nodeId,
   } = useConnectionDrag(
     reactFlowInstance,
     originalOnConnect,
@@ -236,14 +243,14 @@ function AgentCanvas({ drawerVisible, hideDrawer }: IProps) {
   ]);
 
   return (
-    <div className={styles.canvasWrapper}>
+    <div className={cn(styles.canvasWrapper, 'px-5 pb-5')}>
       <svg
         xmlns="http://www.w3.org/2000/svg"
         style={{ position: 'absolute', top: 10, left: 0 }}
       >
         <defs>
           <marker
-            fill="rgb(157 149 225)"
+            fill="var(--text-disabled)"
             id="logo"
             viewBox="0 0 40 40"
             refX="8"
@@ -286,12 +293,6 @@ function AgentCanvas({ drawerVisible, hideDrawer }: IProps) {
           defaultEdgeOptions={{
             type: 'buttonEdge',
             markerEnd: 'logo',
-            style: {
-              strokeWidth: 1,
-              stroke: isDarkTheme
-                ? 'rgba(91, 93, 106, 1)'
-                : 'rgba(151, 154, 171, 1)',
-            },
             zIndex: 1001, // https://github.com/xyflow/xyflow/discussions/3498
           }}
           deleteKeyCode={['Delete', 'Backspace']}
@@ -322,7 +323,7 @@ function AgentCanvas({ drawerVisible, hideDrawer }: IProps) {
               }
             }
           >
-            <InnerNextStepDropdown
+            <NextStepDropdown
               hideModal={() => {
                 removePlaceholderNode();
                 hideModal();
@@ -330,9 +331,10 @@ function AgentCanvas({ drawerVisible, hideDrawer }: IProps) {
               }}
               position={dropdownPosition}
               onNodeCreated={onNodeCreated}
+              nodeId={nodeId}
             >
               <span></span>
-            </InnerNextStepDropdown>
+            </NextStepDropdown>
           </HandleContext.Provider>
         )}
       </AgentInstanceContext.Provider>
